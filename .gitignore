@@ -7,3 +7,7 @@ my_package.egg-info/
 # data folder except the gitkeep
 data/*
 !data/.gitkeep
+
+# exclude __pycache__ and *.pyc files
+src/**/__pycache__/
+src/**/*.pyc
