@@ -3,55 +3,77 @@ Demo pipeline to tie together the desired APIs
 """
 
 import os
-import pickle
+import argparse
+# import pandas as pd
 from langchain.vectorstores import FAISS
 from langchain.chains import AnalyzeDocumentChain
-from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.document_loaders import PDFMinerLoader
+# from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain.document_loaders import PyMuPDFLoader
 
-# if data/intermediate/test_pdf.pkl exists, load it
-# into memory as 'data', otherwise load the PDF
-# via lanchain
-if os.path.exists("data/intermediate/test_pdf.pkl"):
-    with open("data/intermediate/test_pdf.pkl", "rb") as f:
-        data = pickle.load(f)
-else:
-    loader = PDFMinerLoader("data/raw/AR2022EN.pdf")
-    data = loader.load()
-    # save data to a picle file in the data/intermediate folder
-    with open("data/intermediate/test_pdf.pkl", "wb") as f:
-        pickle.dump(data, f)
+# use argparse to pass in the path to the PDF file. Assume that the
+# path is passed with the --pdf_path flag
+parser = argparse.ArgumentParser()
+parser.add_argument("--pdf_path", type=str, required=True)
+parser.add_argument("--output_dir", type=str,
+                    default="data/intermediate/test_pdf")
+parser.add_argument('--write_pages', action=argparse.BooleanOptionalAction)
 
-# Split the PDF into chunks: You can use a splitter from the LangChain library
-# to divide the PDF into smaller chunks based on your requirements. Here's an
-# example of splitting the PDF into chunks with a maximum of 1000 words each:
+args = parser.parse_args()
 
-text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=1000,
-    chunk_overlap=20,
-    length_function=len,
-)
+PDF_PATH = args.pdf_path
+OUTPUT_DIR = args.output_dir
 
-chunks = text_splitter.split_documents(data)
+loader = PyMuPDFLoader(PDF_PATH)
+data = loader.load()
 
-# Save the chunks: Once the PDF is divided into chunks, you can save them to
-# individual files:
+print(len(data))
 
-if not os.path.exists("data/intermediate/test_pdf"):
-    os.makedirs("data/intermediate/test_pdf")
+if args.write_pages:
+    # Save pages to individual files
+    if not os.path.exists("data/intermediate/test_pdf"):
+        os.makedirs("data/intermediate/test_pdf")
 
-for i, chunk in enumerate(chunks):
-    with open(f"data/intermediate/test_pdf/chunk_{i}.txt", "w") as f:
-        f.write(chunk.page_content)
+    # use os to wipe the contents of the directory above, if it exists
+    for file in os.listdir("data/intermediate/test_pdf"):
+        os.remove(os.path.join("data/intermediate/test_pdf", file))
+
+    for page in data:
+        path = f"data/intermediate/test_pdf/p_{page.metadata['page_number']}.txt"  # noqa: E501
+        with open(path, "w") as f:
+            f.write(page.page_content)
 
 # Optional: Embedding and similarity search: If you need to perform similarity
 # searches among the chunks, you can use LangChain's FAISS vector store along
 # with OpenAIEmbeddings python.langchain.com:
 
+from langchain.embeddings import HuggingFaceEmbeddings
 
-faiss_index = FAISS.from_documents(chunks, OpenAIEmbeddings())
-docs = faiss_index.similarity_search("Your search query", k=2)
+model_name = "sentence-transformers/all-mpnet-base-v2"
+model_kwargs = {'device': 'cpu'}
+hf = HuggingFaceEmbeddings(model_name=model_name, model_kwargs=model_kwargs)
+
+
+import logging
+# set the logging level to INFO to see the similarity search results
+logging.basicConfig(level=logging.DEBUG)
+
+
+import traceback
+
+try:
+    # Replace the OpenAIEmbeddings() call with the `get_embeddings` function
+    faiss_index = FAISS.from_documents(data, hf)
+    docs = faiss_index.similarity_search("digital and data infrastructure", k=2)
+except Exception as e:
+    # Capture the stack trace
+    print(e)
+    stack_trace = traceback.format_exc()
+    print(stack_trace)
+
+
+# Unused currently
+# faiss_index = FAISS.from_documents(data, OpenAIEmbeddings())  # hot
+# docs = faiss_index.similarity_search("Your search query", k=2)
 
 for doc in docs:
     print(doc.page_content)
