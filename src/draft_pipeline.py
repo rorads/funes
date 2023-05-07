@@ -2,6 +2,9 @@
 Demo pipeline to tie together the desired APIs
 """
 
+import traceback
+import logging
+from langchain.embeddings import HuggingFaceEmbeddings
 import os
 import argparse
 # import pandas as pd
@@ -9,6 +12,9 @@ from langchain.vectorstores import FAISS
 from langchain.chains import AnalyzeDocumentChain
 # from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.document_loaders import PyMuPDFLoader
+
+# set the logging level to INFO to see the similarity search results
+logging.basicConfig(level=logging.DEBUG)
 
 # use argparse to pass in the path to the PDF file. Assume that the
 # path is passed with the --pdf_path flag
@@ -19,7 +25,6 @@ parser.add_argument("--output_dir", type=str,
 parser.add_argument('--write_pages', action=argparse.BooleanOptionalAction)
 
 args = parser.parse_args()
-
 PDF_PATH = args.pdf_path
 OUTPUT_DIR = args.output_dir
 
@@ -46,24 +51,17 @@ if args.write_pages:
 # searches among the chunks, you can use LangChain's FAISS vector store along
 # with OpenAIEmbeddings python.langchain.com:
 
-from langchain.embeddings import HuggingFaceEmbeddings
 
 model_name = "sentence-transformers/all-mpnet-base-v2"
 model_kwargs = {'device': 'cpu'}
 hf = HuggingFaceEmbeddings(model_name=model_name, model_kwargs=model_kwargs)
 
 
-import logging
-# set the logging level to INFO to see the similarity search results
-logging.basicConfig(level=logging.DEBUG)
-
-
-import traceback
-
 try:
     # Replace the OpenAIEmbeddings() call with the `get_embeddings` function
     faiss_index = FAISS.from_documents(data, hf)
-    docs = faiss_index.similarity_search("digital and data infrastructure", k=2)
+    docs = faiss_index.similarity_search(
+        "digital and data infrastructure", k=2)
 except Exception as e:
     # Capture the stack trace
     print(e)

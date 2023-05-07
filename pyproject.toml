@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "funes"
+version = "0.1.0"
+description = "Using embeddings and other trics to achieve sematic search and long term memory"
+authors = ["Rory Scott <7805169+rorads@users.noreply.github.com>"]
+license = "Apache"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+langchain = "^0.0.160"
+argparse = "^1.4.0"
+pymupdf = "^1.22.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
