@@ -1,4 +1,0 @@
-[MASTER]
-
-# add src and .ve/bin/python to sys.path, so that local modules are found
-init-hook='import sys; sys.path.append("/workspaces/funes/src/"); sys.path.append(/workspaces/funes/.ve/bin/python")'

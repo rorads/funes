@@ -19,4 +19,13 @@ poetry completions bash >> ~/.bash_completion
 # set virtualenv to be in project
 poetry config virtualenvs.in-project true
 
+# enter poetry shell
+poetry shell
+
+# install dependencies
+poetry install
+
+# at this point, you should be able to run the project
+# either in shell, or through the pre-configured run configs
+# in VSCode
 ```
