@@ -16,7 +16,7 @@ poetry self update
 # enable completions
 poetry completions bash >> ~/.bash_completion
 
-# set virtualenv to be in project
+# set virtualenv to be in project (this will add .venv once installed)
 poetry config virtualenvs.in-project true
 
 # enter poetry shell
