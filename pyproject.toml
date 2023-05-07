@@ -11,6 +11,7 @@ python = "^3.10"
 langchain = "^0.0.160"
 argparse = "^1.4.0"
 pymupdf = "^1.22.2"
+sentence-transformers = "^2.2.2"
 
 
 [build-system]
